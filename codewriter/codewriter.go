@@ -120,7 +120,7 @@ func (cw *CodeWriter) WriteArithmetic(command string) {
 }
 
 func (cw *CodeWriter) WritePushPop(cmd int, segment string, index int64) {
-	cw.writer.WriteString("// " + strconv.Itoa(cmd) + " " + segment + " " + strconv.FormatInt(index, 10) + "\n")
+	cw.writer.WriteString("// " + commandName(cmd) + " " + segment + " " + strconv.FormatInt(index, 10) + "\n")
 	switch cmd {
 	case parser.C_PUSH:
 		cw.writePush(segment, index)
@@ -130,15 +130,52 @@ func (cw *CodeWriter) WritePushPop(cmd int, segment string, index int64) {
 	return
 }
 
+func commandName(cmd int) string {
+	switch cmd {
+	case parser.C_PUSH:
+		return "push"
+	case parser.C_POP:
+		return "pop"
+	}
+	return ""
+}
+
 func (cw *CodeWriter) writePush(segment string, index int64) {
+	var cmd string
+	pushStr := "\nA=D+A\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n"
 	switch segment {
 	case "constant":
-		cmd := "@" + strconv.FormatInt(index, 10) + "\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n"
-		cw.writer.WriteString(cmd)
+		cmd = "@" + strconv.FormatInt(index, 10) + "\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n"
+	case "local":
+		cmd = "@LCL\nD=M\n@" + strconv.FormatInt(index, 10) + pushStr
+	case "argument":
+		cmd = "@ARG\nD=M\n@" + strconv.FormatInt(index, 10) + pushStr
+	case "this":
+		cmd = "@THIS\nD=M\n@" + strconv.FormatInt(index, 10) + pushStr
+	case "that":
+		cmd = "@THAT\nD=M\n@" + strconv.FormatInt(index, 10) + pushStr
+	case "temp":
+		cmd = "@5\nD=A\n@" + strconv.FormatInt(index, 10) + pushStr
 	}
+	cw.writer.WriteString(cmd)
 	return
 }
 
 func (cw *CodeWriter) writePop(segment string, index int64) {
+	var cmd string
+	popStr := "\nD=D+A\n@R13\nM=D\n@SP\nM=M-1\nA=M\nD=M\n@R13\nA=M\nM=D\n"
+	switch segment {
+	case "local":
+		cmd = "@LCL\nD=M\n@" + strconv.FormatInt(index, 10) + popStr
+	case "argument":
+		cmd = "@ARG\nD=M\n@" + strconv.FormatInt(index, 10) + popStr
+	case "this":
+		cmd = "@THIS\nD=M\n@" + strconv.FormatInt(index, 10) + popStr
+	case "that":
+		cmd = "@THAT\nD=M\n@" + strconv.FormatInt(index, 10) + popStr
+	case "temp":
+		cmd = "@5\nD=A\n@" + strconv.FormatInt(index, 10) + popStr
+	}
+	cw.writer.WriteString(cmd)
 	return
 }

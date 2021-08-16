@@ -60,14 +60,15 @@ M=M+1
 const opStr = "{{Operation}}"
 
 type CodeWriter struct {
-	file       *os.File
-	writer     *bufio.Writer
-	labelCount int
+	file        *os.File
+	writer      *bufio.Writer
+	labelCount  int
+	staticCount int
 }
 
 func NewCodeWriter(file *os.File) *CodeWriter {
 	writer := bufio.NewWriter(file)
-	return &CodeWriter{file: file, writer: writer, labelCount: 0}
+	return &CodeWriter{file: file, writer: writer, labelCount: 0, staticCount: 0}
 }
 
 func (cw *CodeWriter) Flush() {
@@ -156,6 +157,15 @@ func (cw *CodeWriter) writePush(segment string, index int64) {
 		cmd = "@THAT\nD=M\n@" + strconv.FormatInt(index, 10) + pushStr
 	case "temp":
 		cmd = "@5\nD=A\n@" + strconv.FormatInt(index, 10) + pushStr
+	case "static":
+		cmd = "@" + cw.getFilename() + "." + strconv.FormatInt(index, 10) + "\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n"
+	case "pointer":
+		if index == 0 {
+			cmd = "@THIS\n"
+		} else if index == 1 {
+			cmd = "@THAT\n"
+		}
+		cmd += "D=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n"
 	}
 	cw.writer.WriteString(cmd)
 	return
@@ -175,7 +185,21 @@ func (cw *CodeWriter) writePop(segment string, index int64) {
 		cmd = "@THAT\nD=M\n@" + strconv.FormatInt(index, 10) + popStr
 	case "temp":
 		cmd = "@5\nD=A\n@" + strconv.FormatInt(index, 10) + popStr
+	case "static":
+		cmd = "@SP\nM=M-1\nA=M\nD=M\n" + "@" + cw.getFilename() + "." + strconv.FormatInt(index, 10) + "\nM=D\n"
+	case "pointer":
+		if index == 0 {
+			cmd = "@SP\nM=M-1\nA=M\nD=M\n@THIS\nM=D\n"
+		} else if index == 1 {
+			cmd = "@SP\nM=M-1\nA=M\nD=M\n@THAT\nM=D\n"
+		}
 	}
 	cw.writer.WriteString(cmd)
 	return
+}
+
+func (cw *CodeWriter) getFilename() string {
+	fnameParts := s.Split(cw.file.Name(), "/")
+	fnameParts = s.Split(fnameParts[len(fnameParts)-1], ".")
+	return fnameParts[0]
 }

@@ -83,6 +83,18 @@ func (p *Parser) CommandType() int {
 		return C_PUSH
 	case "pop":
 		return C_POP
+	case "label":
+		return C_LABEL
+	case "goto":
+		return C_GOTO
+	case "if-goto":
+		return C_IF
+	case "function":
+		return C_FUNCTION
+	case "return":
+		return C_RETURN
+	case "call":
+		return C_CALL
 	}
 	log.Fatal("Command not recognised")
 	return -1

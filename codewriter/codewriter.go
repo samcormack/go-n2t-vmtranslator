@@ -198,6 +198,20 @@ func (cw *CodeWriter) writePop(segment string, index int64) {
 	return
 }
 
+func (cw *CodeWriter) WriteLabel(arg string) {
+	cw.writer.WriteString("(" + arg + ")\n")
+}
+
+func (cw *CodeWriter) WriteGoto(arg string) {
+	cw.writer.WriteString("@" + arg + "\n0;JMP\n")
+}
+
+func (cw *CodeWriter) WriteIfGoto(arg string) {
+	cw.writer.WriteString(goToNext)
+	cw.writer.WriteString("D=M")
+	cw.writer.WriteString("@" + arg + "\nD;JNE\n")
+}
+
 func (cw *CodeWriter) getFilename() string {
 	fnameParts := s.Split(cw.file.Name(), "/")
 	fnameParts = s.Split(fnameParts[len(fnameParts)-1], ".")

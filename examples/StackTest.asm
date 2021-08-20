@@ -1,4 +1,4 @@
-// 1 constant 17
+// push constant 17
 @17
 D=A
 @SP
@@ -6,7 +6,7 @@ A=M
 M=D
 @SP
 M=M+1
-// 1 constant 17
+// push constant 17
 @17
 D=A
 @SP
@@ -41,7 +41,7 @@ M=D
 (LABEL-1)
 @SP
 M=M+1
-// 1 constant 17
+// push constant 17
 @17
 D=A
 @SP
@@ -49,7 +49,7 @@ A=M
 M=D
 @SP
 M=M+1
-// 1 constant 16
+// push constant 16
 @16
 D=A
 @SP
@@ -84,7 +84,7 @@ M=D
 (LABEL-3)
 @SP
 M=M+1
-// 1 constant 16
+// push constant 16
 @16
 D=A
 @SP
@@ -92,7 +92,7 @@ A=M
 M=D
 @SP
 M=M+1
-// 1 constant 17
+// push constant 17
 @17
 D=A
 @SP
@@ -127,7 +127,7 @@ M=D
 (LABEL-5)
 @SP
 M=M+1
-// 1 constant 892
+// push constant 892
 @892
 D=A
 @SP
@@ -135,7 +135,7 @@ A=M
 M=D
 @SP
 M=M+1
-// 1 constant 891
+// push constant 891
 @891
 D=A
 @SP
@@ -170,7 +170,7 @@ M=D
 (LABEL-7)
 @SP
 M=M+1
-// 1 constant 891
+// push constant 891
 @891
 D=A
 @SP
@@ -178,7 +178,7 @@ A=M
 M=D
 @SP
 M=M+1
-// 1 constant 892
+// push constant 892
 @892
 D=A
 @SP
@@ -213,7 +213,7 @@ M=D
 (LABEL-9)
 @SP
 M=M+1
-// 1 constant 891
+// push constant 891
 @891
 D=A
 @SP
@@ -221,7 +221,7 @@ A=M
 M=D
 @SP
 M=M+1
-// 1 constant 891
+// push constant 891
 @891
 D=A
 @SP
@@ -256,7 +256,7 @@ M=D
 (LABEL-11)
 @SP
 M=M+1
-// 1 constant 32767
+// push constant 32767
 @32767
 D=A
 @SP
@@ -264,7 +264,7 @@ A=M
 M=D
 @SP
 M=M+1
-// 1 constant 32766
+// push constant 32766
 @32766
 D=A
 @SP
@@ -299,7 +299,7 @@ M=D
 (LABEL-13)
 @SP
 M=M+1
-// 1 constant 32766
+// push constant 32766
 @32766
 D=A
 @SP
@@ -307,7 +307,7 @@ A=M
 M=D
 @SP
 M=M+1
-// 1 constant 32767
+// push constant 32767
 @32767
 D=A
 @SP
@@ -342,7 +342,7 @@ M=D
 (LABEL-15)
 @SP
 M=M+1
-// 1 constant 32766
+// push constant 32766
 @32766
 D=A
 @SP
@@ -350,7 +350,7 @@ A=M
 M=D
 @SP
 M=M+1
-// 1 constant 32766
+// push constant 32766
 @32766
 D=A
 @SP
@@ -385,7 +385,7 @@ M=D
 (LABEL-17)
 @SP
 M=M+1
-// 1 constant 57
+// push constant 57
 @57
 D=A
 @SP
@@ -393,7 +393,7 @@ A=M
 M=D
 @SP
 M=M+1
-// 1 constant 31
+// push constant 31
 @31
 D=A
 @SP
@@ -401,7 +401,7 @@ A=M
 M=D
 @SP
 M=M+1
-// 1 constant 53
+// push constant 53
 @53
 D=A
 @SP
@@ -420,7 +420,7 @@ A=M
 M=D+M
 @SP
 M=M+1
-// 1 constant 112
+// push constant 112
 @112
 D=A
 @SP
@@ -457,7 +457,7 @@ A=M
 M=D&M
 @SP
 M=M+1
-// 1 constant 82
+// push constant 82
 @82
 D=A
 @SP
@@ -483,6 +483,3 @@ A=M
 M=!M
 @SP
 M=M+1
-(LABEL-END)
-@LABEL-END
-0;JMP

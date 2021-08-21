@@ -20,21 +20,28 @@ func main() {
 	}
 
 	fname := s.TrimSuffix(arg, ".vm")
+	var outfileName string
+	if fname == arg {
+		outfileName = filepath.Join(fname, filepath.Base(fname)) + ".asm"
+	} else {
+		outfileName = fname + ".asm"
+	}
 
 	// Create output file and writer
-	outfile, err := os.Create(fname + ".asm")
+	outfile, err := os.Create(outfileName)
 	check(err)
 	defer outfile.Close()
 
 	cw := codewriter.NewCodeWriter(outfile)
+	defer cw.Flush()
 
 	if fname == arg {
 		// Run on files in directory
 		files, err := ioutil.ReadDir(fname)
 		check(err)
 		for _, file := range files {
-			if isVM(file.Name()) {
-				parseFile(file.Name(), cw)
+			if isVM(filepath.Join(fname, file.Name())) {
+				parseFile(filepath.Join(fname, file.Name()), cw)
 			}
 		}
 	} else if isVM(arg) {
@@ -43,7 +50,7 @@ func main() {
 		log.Fatal("Argument was not a vm file or directory.")
 	}
 
-	cw.WriteEnd()
+	// cw.WriteEnd()
 
 }
 
@@ -52,9 +59,9 @@ func parseFile(fname string, cw *codewriter.CodeWriter) {
 	check(err)
 	defer infile.Close()
 
+	cw.SetCurrentFile(fname)
 	p := parser.NewParser(infile)
 
-	defer cw.Flush()
 	for p.HasMoreCommands() {
 		p.Advance()
 		switch p.CommandType() {
@@ -64,6 +71,10 @@ func parseFile(fname string, cw *codewriter.CodeWriter) {
 			cw.WritePushPop(p.CommandType(), p.Arg1(), p.Arg2())
 		case parser.C_LABEL:
 			cw.WriteLabel(p.Arg1())
+		case parser.C_GOTO:
+			cw.WriteGoto(p.Arg1())
+		case parser.C_IF:
+			cw.WriteIfGoto(p.Arg1())
 		}
 	}
 }

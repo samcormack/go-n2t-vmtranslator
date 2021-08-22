@@ -64,6 +64,7 @@ type CodeWriter struct {
 	writer          *bufio.Writer
 	labelCount      int
 	staticCount     int
+	callCount       int
 	currentReadFile string
 	currentFunction string
 }
@@ -75,6 +76,7 @@ func NewCodeWriter(file *os.File) *CodeWriter {
 		writer:          writer,
 		labelCount:      0,
 		staticCount:     0,
+		callCount:       0,
 		currentReadFile: getFilename(file.Name()),
 		currentFunction: "main",
 	}
@@ -87,6 +89,10 @@ func (cw *CodeWriter) SetCurrentFile(fname string) {
 func (cw *CodeWriter) Flush() {
 	cw.writer.Flush()
 	return
+}
+
+func (cw *CodeWriter) WriteInit() {
+
 }
 
 func (cw *CodeWriter) WriteEnd() {
@@ -228,8 +234,61 @@ func (cw *CodeWriter) WriteIfGoto(arg string) {
 	cw.writer.WriteString("@" + cw.genLabel(arg) + "\nD;JNE\n")
 }
 
+func (cw *CodeWriter) WriteCall(functionName string, numArgs int64) {
+	cw.writer.WriteString("// call" + functionName + strconv.FormatInt(numArgs, 10) + "\n")
+	// Save return address
+	cw.writer.WriteString("@" + cw.getReturnAddr() + "\nD=A\n")
+	cw.writePushD()
+	// Save memory segment locations
+	cw.writer.WriteString("@LCL\nD=A\n")
+	cw.writePushD()
+	cw.writer.WriteString("@ARG\nD=A\n")
+	cw.writePushD()
+	cw.writer.WriteString("@THIS\nD=A\n")
+	cw.writePushD()
+	cw.writer.WriteString("@THAT\nD=A\n")
+	cw.writePushD()
+	//Reposition ARG
+	cw.writer.WriteString("@SP\nD=A\n")
+	cw.writePushD()
+	cw.writePush("constant", numArgs)
+	cw.WriteArithmetic("sub")
+	cw.writePush("constant", 5)
+	cw.WriteArithmetic("sub")
+	cw.writePopD()
+	cw.writer.WriteString("@ARG\nM=D\n")
+	// Reposition LCL
+	cw.writer.WriteString("@SP\nD=A\n")
+	cw.writer.WriteString("@LCL\nM=D\n")
+	// go to function
+	cw.writer.WriteString("@" + functionName + "\n0:JMP\n")
+	// Write return address label
+	cw.writer.WriteString("(" + cw.getReturnAddr() + ")")
+	cw.callCount += 1
+}
+
+func (cw *CodeWriter) WriteReturn() {
+
+}
+
+func (cw *CodeWriter) WriteFunction(functionName string, numLocals int64) {
+	cw.currentFunction = functionName
+}
+
 func (cw *CodeWriter) genLabel(raw string) string {
 	return cw.currentReadFile + "." + cw.currentFunction + "$" + raw
+}
+
+func (cw *CodeWriter) getReturnAddr() {
+	return "return-address-" + strconv.FormatInt(cw.callCount, 10)
+}
+
+func (cw *CodeWriter) writePushD() {
+	cw.CodeWriter.WriteString("@SP\nA=M\nM=D\n@SP\nM=M+1\n")
+}
+
+func (cw *CodeWriter) writePopD() {
+	cw.writer.WriteString("@SP\nM=M-1\nA=M\nD=M\n")
 }
 
 func getFilename(path string) string {

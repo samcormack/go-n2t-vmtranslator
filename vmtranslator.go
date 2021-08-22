@@ -35,6 +35,8 @@ func main() {
 	cw := codewriter.NewCodeWriter(outfile)
 	defer cw.Flush()
 
+	cw.WriteInit()
+
 	if fname == arg {
 		// Run on files in directory
 		files, err := ioutil.ReadDir(fname)
@@ -75,6 +77,12 @@ func parseFile(fname string, cw *codewriter.CodeWriter) {
 			cw.WriteGoto(p.Arg1())
 		case parser.C_IF:
 			cw.WriteIfGoto(p.Arg1())
+		case parser.C_CALL:
+			cw.WriteCall(p.Arg1(), p.Arg2())
+		case parser.C_RETURN:
+			cw.WriteReturn()
+		case parser.C_FUNCTION:
+			cw.WriteFunction(p.Arg1(), p.Arg2())
 		}
 	}
 }

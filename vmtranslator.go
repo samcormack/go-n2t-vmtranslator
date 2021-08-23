@@ -35,10 +35,9 @@ func main() {
 	cw := codewriter.NewCodeWriter(outfile)
 	defer cw.Flush()
 
-	cw.WriteInit()
-
 	if fname == arg {
 		// Run on files in directory
+		cw.WriteInit()
 		files, err := ioutil.ReadDir(fname)
 		check(err)
 		for _, file := range files {

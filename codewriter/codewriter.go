@@ -92,7 +92,8 @@ func (cw *CodeWriter) Flush() {
 }
 
 func (cw *CodeWriter) WriteInit() {
-
+	cw.writer.WriteString("@256\nD=A\n@SP\nA=M\nM=D\n")
+	cw.WriteCall("Sys.init", 0)
 }
 
 func (cw *CodeWriter) WriteEnd() {
@@ -235,56 +236,73 @@ func (cw *CodeWriter) WriteIfGoto(arg string) {
 }
 
 func (cw *CodeWriter) WriteCall(functionName string, numArgs int64) {
-	cw.writer.WriteString("// call" + functionName + strconv.FormatInt(numArgs, 10) + "\n")
+	cw.writer.WriteString("// call " + functionName + " " + strconv.FormatInt(numArgs, 10) + "\n")
 	// Save return address
 	cw.writer.WriteString("@" + cw.getReturnAddr() + "\nD=A\n")
 	cw.writePushD()
 	// Save memory segment locations
-	cw.writer.WriteString("@LCL\nD=A\n")
+	cw.writer.WriteString("@LCL\nD=M\n")
 	cw.writePushD()
-	cw.writer.WriteString("@ARG\nD=A\n")
+	cw.writer.WriteString("@ARG\nD=M\n")
 	cw.writePushD()
-	cw.writer.WriteString("@THIS\nD=A\n")
+	cw.writer.WriteString("@THIS\nD=M\n")
 	cw.writePushD()
-	cw.writer.WriteString("@THAT\nD=A\n")
+	cw.writer.WriteString("@THAT\nD=M\n")
 	cw.writePushD()
 	//Reposition ARG
-	cw.writer.WriteString("@SP\nD=A\n")
-	cw.writePushD()
-	cw.writePush("constant", numArgs)
-	cw.WriteArithmetic("sub")
-	cw.writePush("constant", 5)
-	cw.WriteArithmetic("sub")
-	cw.writePopD()
+	cw.writer.WriteString("@SP\nD=M\n@" + strconv.FormatInt(numArgs, 10) + "\nD=D-A\n@5\nD=D-A\n")
 	cw.writer.WriteString("@ARG\nM=D\n")
 	// Reposition LCL
-	cw.writer.WriteString("@SP\nD=A\n")
+	cw.writer.WriteString("@SP\nD=M\n")
 	cw.writer.WriteString("@LCL\nM=D\n")
 	// go to function
-	cw.writer.WriteString("@" + functionName + "\n0:JMP\n")
+	cw.writer.WriteString("@" + functionName + "\n0;JMP\n")
 	// Write return address label
-	cw.writer.WriteString("(" + cw.getReturnAddr() + ")")
+	cw.writer.WriteString("(" + cw.getReturnAddr() + ")\n")
 	cw.callCount += 1
 }
 
 func (cw *CodeWriter) WriteReturn() {
-
+	cw.writer.WriteString("// return\n")
+	// Store LCL in FRAME temp variable R13
+	cw.writer.WriteString("@LCL\nD=M\n@R13\nM=D\n")
+	// Store return address in RET temp variable R14
+	cw.writer.WriteString("@5\nA=D-A\nD=M\n@R14\nM=D\n")
+	// Put return value into ARG 0
+	cw.writePopD()
+	cw.writer.WriteString("@ARG\nA=M\nM=D\n")
+	// Move SP back to caller
+	cw.writer.WriteString("@ARG\nD=M+1\n@SP\nM=D\n")
+	// Restore caller state
+	cw.writer.WriteString("@R13\nAM=M-1\nD=M\n@THAT\nM=D\n")
+	cw.writer.WriteString("@R13\nAM=M-1\nD=M\n@THIS\nM=D\n")
+	cw.writer.WriteString("@R13\nAM=M-1\nD=M\n@ARG\nM=D\n")
+	cw.writer.WriteString("@R13\nAM=M-1\nD=M\n@LCL\nM=D\n")
+	// Goto return address
+	cw.writer.WriteString("@R14\nA=M\n0;JMP\n")
 }
 
 func (cw *CodeWriter) WriteFunction(functionName string, numLocals int64) {
 	cw.currentFunction = functionName
+	cw.writer.WriteString("// function " + functionName + strconv.FormatInt(numLocals, 10) + "\n")
+	cw.writer.WriteString("(" + functionName + ")\n")
+	cw.writer.WriteString("D=0\n")
+	for i := 0; i < int(numLocals); i++ {
+		cw.writePushD()
+	}
+
 }
 
 func (cw *CodeWriter) genLabel(raw string) string {
 	return cw.currentReadFile + "." + cw.currentFunction + "$" + raw
 }
 
-func (cw *CodeWriter) getReturnAddr() {
-	return "return-address-" + strconv.FormatInt(cw.callCount, 10)
+func (cw *CodeWriter) getReturnAddr() string {
+	return "return-address-" + strconv.Itoa(cw.callCount)
 }
 
 func (cw *CodeWriter) writePushD() {
-	cw.CodeWriter.WriteString("@SP\nA=M\nM=D\n@SP\nM=M+1\n")
+	cw.writer.WriteString("@SP\nA=M\nM=D\n@SP\nM=M+1\n")
 }
 
 func (cw *CodeWriter) writePopD() {

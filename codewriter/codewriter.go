@@ -92,7 +92,7 @@ func (cw *CodeWriter) Flush() {
 }
 
 func (cw *CodeWriter) WriteInit() {
-	cw.writer.WriteString("@256\nD=A\n@SP\nA=M\nM=D\n")
+	cw.writer.WriteString("@256\nD=A\n@SP\nM=D\n")
 	cw.WriteCall("Sys.init", 0)
 }
 
